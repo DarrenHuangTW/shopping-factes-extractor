@@ -29,16 +29,13 @@ api_key = st.sidebar.text_input(
 
 # Country selection
 country_options = {
-    "United States": "us",
-    "United Kingdom": "uk", 
-    "Canada": "ca",
     "Australia": "au",
-    "Germany": "de",
-    "France": "fr",
-    "Japan": "jp",
-    "India": "in",
-    "Brazil": "br",
-    "Mexico": "mx"
+    "New Zealand": "nz",
+    "United States": "us",
+    "Singapore": "sg",
+    "Philippines": "ph",
+    "United Kingdom": "uk", 
+    "Germany": "de"
 }
 
 selected_country = st.sidebar.selectbox(
@@ -53,14 +50,9 @@ gl_param = country_options[selected_country]
 language_options = {
     "English": "en",
     "Spanish": "es",
-    "French": "fr",
     "German": "de",
-    "Japanese": "ja",
-    "Portuguese": "pt",
     "Chinese (Simplified)": "zh-cn",
-    "Chinese (Traditional)": "zh-tw",
-    "Korean": "ko",
-    "Italian": "it"
+    "Chinese (Traditional)": "zh-tw"
 }
 
 selected_language = st.sidebar.selectbox(
@@ -259,10 +251,13 @@ if 'processing_results' in st.session_state and st.session_state.processing_resu
 st.markdown("---")
 st.markdown(
     """
-    <div style='text-align: center; color: #666;'>
+    <div style='text-align: center; color: #666; padding: 20px;'>
+        <p>🤖 <strong>Made by Darren Huang & His AI Sidekick</strong></p>
         <p>Built with Streamlit • Powered by SerpAPI</p>
-        <p>Need help? Check the <a href='https://serpapi.com/search-api' target='_blank'>SerpAPI documentation</a></p>
+        <p>Found a bug? Have questions? Need someone to blame?
+        <a href='https://www.linkedin.com/in/hunghsunhuang/' target='_blank' style='color: #0077B5; text-decoration: none;'>
+        📧 Talk to me via LinkedIn DMs</a> 🚀</p>
     </div>
-    """, 
+    """,
     unsafe_allow_html=True
 )
