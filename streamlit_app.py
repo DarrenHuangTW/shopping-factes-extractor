@@ -180,7 +180,7 @@ if 'processing_results' in st.session_state and st.session_state.processing_resu
         st.subheader("📋 Data Preview")
         
         # Convert to DataFrame for display
-        df = pd.DataFrame(results['data'], columns=['Keyword', 'Type', 'Title'])
+        df = pd.DataFrame(results['data'], columns=['Keyword', 'Attribute', 'Value'])
         st.dataframe(df, use_container_width=True)
         
         # Search Metadata section
