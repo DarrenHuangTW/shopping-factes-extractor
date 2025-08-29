@@ -169,3 +169,7 @@ def validate_keywords(keywords_text: str, max_keywords: int = 30) -> Tuple[List[
     valid_keywords = [k for k in keywords if k]
     
     return valid_keywords, errors
+
+
+
+
