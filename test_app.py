@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
 Test script for the Shopping Facets Extractor
-Tests the core functionality without requiring a real API key
+Tests the core functionality without requiring a real API key.
+Integration tests require SERPAPI_KEY in .env file.
 """
 
 import os
+from dotenv import load_dotenv
 from search_utils import validate_keywords, extract_refine_filters
+
+load_dotenv()
 
 def test_keyword_validation():
     """Test keyword validation functionality"""
@@ -39,49 +43,63 @@ def test_keyword_validation():
     print("✅ Mixed input with empty lines test passed")
 
 def test_refine_filters_extraction():
-    """Test refine filters extraction with mock data"""
+    """Test refine filters extraction with mock google_shopping API data"""
     print("\n🧪 Testing refine filters extraction...")
-    
-    # Mock SerpAPI response (similar to actual structure)
+
+    # Mock SerpAPI google_shopping response
     mock_results = {
-        "refine_search_filters": [
+        "filters": [
             {
                 "type": "Department",
+                "input_type": "checkbox",
                 "options": [
-                    {"title": "Women's"},
-                    {"title": "Men's"}
+                    {"text": "Women's"},
+                    {"text": "Men's"}
                 ]
             },
             {
                 "type": "Color",
+                "input_type": "checkbox",
                 "options": [
-                    {"title": "Black"},
-                    {"title": "White"},
-                    {"title": "Red"}
+                    {"text": "Black"},
+                    {"text": "White"},
+                    {"text": "Red"}
+                ]
+            },
+            {
+                "type": "Carousel Filters",
+                "options": [
+                    {"text": "On sale"},
+                    {"text": "New"}
                 ]
             }
         ]
     }
-    
+
     extracted = extract_refine_filters(mock_results, "test shoes")
-    
-    # Should extract 5 filters total (2 departments + 3 colors)
-    assert len(extracted) == 5
-    
+
+    # Should extract 5 filters total (2 departments + 3 colors), Carousel Filters excluded
+    assert len(extracted) == 5, f"Expected 5, got {len(extracted)}"
+
     # Check structure: (keyword, type, title)
     assert extracted[0] == ("test shoes", "Department", "Women's")
     assert extracted[1] == ("test shoes", "Department", "Men's")
     assert extracted[2] == ("test shoes", "Color", "Black")
     assert extracted[3] == ("test shoes", "Color", "White")
     assert extracted[4] == ("test shoes", "Color", "Red")
-    
+
     print("✅ Refine filters extraction test passed")
-    
-    # Test with no refine filters
-    empty_results = {"organic_results": []}
+
+    # Verify carousel filters are excluded
+    types_extracted = [row[1] for row in extracted]
+    assert "Carousel Filters" not in types_extracted
+    print("✅ Carousel Filters exclusion test passed")
+
+    # Test with no filters key present
+    empty_results = {"shopping_results": []}
     extracted_empty = extract_refine_filters(empty_results, "no filters")
     assert len(extracted_empty) == 0
-    print("✅ No refine filters test passed")
+    print("✅ No filters test passed")
 
 def test_csv_structure():
     """Test CSV output structure"""
@@ -122,16 +140,49 @@ def test_batch_processing_signature():
     
     print("✅ Batch processing function signature test passed")
 
+def test_integration_live_api():
+    """Integration test: hit real SerpAPI with engine=google_shopping and check filters are returned"""
+    print("\n🧪 Testing live API (google_shopping)...")
+
+    api_key = os.getenv("SERPAPI_KEY")
+    if not api_key:
+        print("⚠️  Skipping integration test: SERPAPI_KEY not set in .env")
+        return
+
+    from search_utils import perform_search
+
+    results = perform_search("Office Chair", api_key, gl="us", hl="en")
+    assert results is not None, "API returned None"
+    assert "filters" in results, f"'filters' key missing from response. Keys found: {list(results.keys())}"
+
+    filters = results["filters"]
+    assert len(filters) > 0, "filters list is empty"
+
+    # Verify left-panel filters exist (non-carousel)
+    left_panel = [f for f in filters if f.get("type") != "Carousel Filters"]
+    assert len(left_panel) > 0, "No left-panel filters found"
+
+    # Spot-check structure — type is optional in some filter groups
+    first = left_panel[0]
+    assert "options" in first
+    assert len(first["options"]) > 0
+    assert "text" in first["options"][0]
+
+    print(f"✅ Live API test passed — {len(left_panel)} left-panel filter groups found")
+    print(f"   Filter types: {[f.get('type', '(no type)') for f in left_panel]}")
+
+
 def run_all_tests():
     """Run all tests"""
     print("🚀 Starting Shopping Facets Extractor Tests\n")
-    
+
     try:
         test_keyword_validation()
         test_refine_filters_extraction()
         test_csv_structure()
         test_batch_processing_signature()
-        
+        test_integration_live_api()
+
         print("\n🎉 All tests passed! The application core functionality is working correctly.")
         print("\n📋 Next steps:")
         print("1. Get your SerpAPI key from https://serpapi.com/")
