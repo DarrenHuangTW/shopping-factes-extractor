@@ -19,7 +19,7 @@ def perform_search(query: str, api_key: str, gl: str = "us", hl: str = "en") -> 
         Dictionary containing search results or None if failed
     """
     params = {
-        "engine": "google",
+        "engine": "google_shopping",
         "q": query,
         "api_key": api_key,
         "gl": gl,
@@ -50,18 +50,21 @@ def extract_refine_filters(results: Dict[str, Any], query: str) -> List[Tuple[st
     Returns:
         List of tuples containing (keyword, filter_type, title)
     """
-    if "refine_search_filters" not in results:
+    if "filters" not in results:
         return []
-    
+
     extracted_data = []
-    filters = results["refine_search_filters"]
-    
+    filters = results["filters"]
+
     for filter_group in filters:
         filter_type = filter_group.get("type", "Unknown")
+        # Skip carousel filters (top horizontal bar) — we only want left panel filters
+        if filter_type == "Carousel Filters":
+            continue
         options = filter_group.get("options", [])
-        
+
         for option in options:
-            title = option.get("title", "Unknown")
+            title = option.get("text", "Unknown")
             extracted_data.append((query, filter_type, title))
     
     return extracted_data
